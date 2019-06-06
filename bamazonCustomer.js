@@ -1,5 +1,5 @@
 const mysql = require("mysql");
-const inquirer = ("inquirer");
+const inquirer = require("inquirer");
 const Table = require("cli-table2");
 
 var connection = mysql.createConnection({
@@ -20,21 +20,25 @@ connection.connect(function(err){
 
 //Function for displaying the products
 function displayProducts() {
-    console.log("List of products \n");
-
+    console.log("-----------------------------");
+    console.log("      Welcome To Bamazon    ");
+    console.log("-----------------------------");
+    console.log("");
+    console.log("Find below our Products List");
+    console.log("");
     //Collect table data from database
     connection.query("SELECT * FROM products", function (err, response) {
         if (err) throw err;
         for (var i = 0; i < response.length; i++) {
-            console.log(response[i].id + ") " + response[i].product_name +" $"+response[i].price);
+            console.log(response[i].id + ") " + response[i].product_name +" $"+response[i].price + " x " + response[i].stock_quantity);
         }
         console.log("\n");
         //Once data is collected start prompt to but porducts
-        startPrompt();
+        shopping();
     });
 }
 
-function startPrompt() {
+function shopping() {
     connection.query("SELECT * FROM products", function (err, response) {
         if (err) throw err;
 
@@ -57,8 +61,26 @@ function startPrompt() {
                 updateQuantity-= answer.quantity
 
                 var totalPrice = answer.quantity * response[chosenItem].price;
+                console.log("The total price for " + response[chosenItem].product_name + " is $" +totalPrice)
+
+                var query2 = connection.query(
+                    "UPDATE products SET ? WHERE ?",
+                    [
+                        {
+                            stock_quantity: updateQuantity
+                        },
+                        {
+                            product_name:response[chosenItem].product_name
+                        }
+                    ],
+                    function(err, res) {
+                        console.log(" YOUR ORDER HAS BEEN PLACED! \n");
+                    }
+                )
+            } else {
+                console.log("WE ARE OUT OF STOCK " + response[chosenItem].product_name + " Insufficient quantity! ")
             }
-        })
-    })
+        });
+    });
 }
 
